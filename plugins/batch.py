@@ -526,34 +526,38 @@ async def text_handler(c, m):
             "progress_message_id": pt.id
             })
         
-        try:
-            for j in range(n):
-                
-                if should_cancel(uid):
-                    await pt.edit(f'Cancelled at {j}/{n}. Success: {success}')
-                    break
-                
-                await update_batch_progress(uid, j, success)
-                
-                mid = int(s) + j
-                
-                try:
-                    msg = await get_msg(ubot, uc, i, mid, lt)
-                    if msg:
-                        res = await process_msg(ubot, uc, msg, str(m.chat.id), lt, uid, i)
-                        if 'Done' in res or 'Copied' in res or 'Sent' in res:
+        CONCURRENCY = 5
+        lock = asyncio.Lock()
+
+        async def process_one(j):
+            nonlocal success
+            mid = int(s) + j
+            try:
+                msg = await get_msg(ubot, uc, i, mid, lt)
+                if msg:
+                    res = await process_msg(ubot, uc, msg, str(m.chat.id), lt, uid, i)
+                    if 'Done' in res or 'Copied' in res or 'Sent' in res:
+                        async with lock:
                             success += 1
-                    else:
-                        pass
-                except Exception as e:
-                    try: await pt.edit(f'{j+1}/{n}: Error - {str(e)[:30]}')
-                    except: pass
-                
-                await asyncio.sleep(10)
-            
-            if j+1 == n:
+            except Exception as e:
+                print(f'Batch item {j+1} error: {e}')
+
+        try:
+            completed = False
+            for chunk_start in range(0, n, CONCURRENCY):
+                if should_cancel(uid):
+                    await pt.edit(f'Cancelled at {chunk_start}/{n}. Success: {success}')
+                    break
+                chunk = range(chunk_start, min(chunk_start + CONCURRENCY, n))
+                await update_batch_progress(uid, chunk_start, success)
+                await asyncio.gather(*[process_one(j) for j in chunk])
+                done = min(chunk_start + CONCURRENCY, n)
+                await pt.edit(f'Progress: {done}/{n} | Success: {success}')
+                if done >= n:
+                    completed = True
+            if completed:
                 await m.reply_text(f'Batch Completed ✅ Success: {success}/{n}')
-        
+
         finally:
             await remove_active_batch(uid)
             Z.pop(uid, None)
