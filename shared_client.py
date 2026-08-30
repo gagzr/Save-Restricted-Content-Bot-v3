@@ -8,8 +8,8 @@ from pyrogram import Client
 import sys
 
 client = TelegramClient("telethonbot", API_ID, API_HASH)
-app = Client("pyrogrambot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, workers=16, max_concurrent_transmissions=8)
-userbot = Client("4gbbot", api_id=API_ID, api_hash=API_HASH, session_string=STRING, workers=16, max_concurrent_transmissions=8)
+app = Client("pyrogrambot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, workers=16, max_concurrent_transmissions=16)
+userbot = Client("4gbbot", api_id=API_ID, api_hash=API_HASH, session_string=STRING, workers=16, max_concurrent_transmissions=16)
 
 async def start_client():
     if not client.is_connected():

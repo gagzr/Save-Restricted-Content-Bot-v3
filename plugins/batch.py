@@ -172,7 +172,7 @@ async def get_ubot(uid):
     if not bt: return None
     if uid in UB: return UB.get(uid)
     try:
-        bot = Client(f"user_{uid}", bot_token=bt, api_id=API_ID, api_hash=API_HASH, workers=16, max_concurrent_transmissions=8)
+        bot = Client(f"user_{uid}", bot_token=bt, api_id=API_ID, api_hash=API_HASH, workers=16, max_concurrent_transmissions=16)
         await bot.start()
         UB[uid] = bot
         return bot
@@ -190,7 +190,7 @@ async def get_uclient(uid):
     if xxx:
         try:
             ss = dcs(xxx)
-            gg = Client(f'{uid}_client', api_id=API_ID, api_hash=API_HASH, device_model="v3saver", session_string=ss, workers=16, max_concurrent_transmissions=8)
+            gg = Client(f'{uid}_client', api_id=API_ID, api_hash=API_HASH, device_model="v3saver", session_string=ss, workers=16, max_concurrent_transmissions=16)
             await gg.start()
             await upd_dlg(gg)
             UC[uid] = gg
@@ -526,7 +526,7 @@ async def text_handler(c, m):
             "progress_message_id": pt.id
             })
         
-        CONCURRENCY = 5
+        CONCURRENCY = 3
         lock = asyncio.Lock()
 
         async def process_one(j):
